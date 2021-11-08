@@ -105,7 +105,8 @@ class XVideo:
 
         #run_in_terminal(['youtube-dl', s.link])
         video_temp = '/tmp/' + s.id #get_temp_file(prefix=s.id)
-        run_in_terminal(['youtube-dl', '--output', video_temp, s.link])
+        #run_in_terminal(['youtube-dl', '--output', video_temp, s.link])
+        run_in_terminal(['yt-dlp', '--output', video_temp, s.link])
 
         dir_ = os.path.dirname(s.video)
         if not os.path.isdir(dir_):
