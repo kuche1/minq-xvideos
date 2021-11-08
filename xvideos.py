@@ -145,7 +145,7 @@ class XVideos:
     first_page_url = url
     nth_page_url = first_page_url + 'new/{}/'
 
-    blacklisted_videos_file = 'video_niggerlist.blacklist'
+    blacklisted_videos_file = 'video_blacklist.blacklist'
     videos_cache_dir = 'videos/{}/'
 
     video_ind = 0
@@ -265,7 +265,7 @@ class XVideos:
             elif cmd in ['play']:
                 video.play()
 
-            elif cmd in ['backlist', 'black'] + ['niggerlist', 'nigger', 'nigg', 'nig']:
+            elif cmd in ['backlist', 'black']:
                 s.blacklist_a_video(video)
                 continue
                 
