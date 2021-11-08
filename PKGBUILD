@@ -1,7 +1,7 @@
 
 # Maintainer: Your Name <youremail@domain.com>
 pkgname=minq_xvideos-git
-pkgver=r2.7facabf757d0392021e9941c85765241a0e9471a
+pkgver=r13.d983a5287e2bb755d0410ce54b3ca2e7160aab46
 pkgrel=1
 epoch=
 pkgdesc="Watch xvideos in your terminal! Undesirable videos can be blocked!"
@@ -18,7 +18,7 @@ conflicts=()
 replaces=()
 backup=()
 options=()
-install=\
+install=	
 changelog=
 source=("git+$url")
 noextract=()
