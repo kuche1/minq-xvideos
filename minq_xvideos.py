@@ -146,7 +146,7 @@ class XVideos:
     first_page_url = url
     nth_page_url = first_page_url + 'new/{}/'
 
-    blacklisted_videos_file = 'video_blacklist.blacklist'
+    blacklisted_videos_file = os.path.expanduser('~/.minq_xvideos/video_blacklist.blacklist')
     videos_cache_dir = 'videos/{}/'
 
     video_ind = 0
@@ -156,6 +156,10 @@ class XVideos:
 
     def __init__(s):
         s.videos = []
+
+        blacklisted_videos_dir = os.path.dirname(s.blacklisted_videos_file)
+        if not os.path.isdir(blacklisted_videos_dir):
+            os.makedirs(blacklisted_videos_dir)
 
         if not os.path.isfile(s.blacklisted_videos_file):
             alert('Blacklisted video file doesn\'t exist; creating')
