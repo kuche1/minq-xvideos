@@ -71,28 +71,6 @@ class XVideo:
         assert cache_dir.endswith('/')
         cache_dir = cache_dir.format(id)
 
-        '''
-        if not os.path.isdir(cache_dir):
-            os.makedirs(cache_dir)
-
-        stock_file_name_cache_dir = cache_dir + 'stock_file_name'
-        stock_file_name_cache_dir_done = stock_file_name_cache_dir + DONE_POSTFIX
-        if os.path.isfile(stock_file_name_cache_dir_done):
-            with open(stock_file_name_cache_dir, 'r') as f:
-                s.stock_file_name = f.read()
-        else:
-            #cmd_get_name = shlex.join(['youtube-dl', '--get-filename', s.link])
-            #name = subprocess.run(cmd_get_name, shell=True, check=True, capture_output=True)
-            name = run_in_terminal(['youtube-dl', '--get-filename', s.link], capture_output=True)
-            name = name.stdout.decode().split('\n')[-2]
-            s.stock_file_name = name
-
-            with open(stock_file_name_cache_dir, 'w') as f:
-                f.write(s.stock_file_name)
-            with open(stock_file_name_cache_dir_done, 'w') as f:
-                pass
-        '''
-
         s.video = cache_dir + 'video' 
         s.video_cached = os.path.isfile(s.video + DONE_POSTFIX)
 
@@ -146,8 +124,8 @@ class XVideos:
     first_page_url = url
     nth_page_url = first_page_url + 'new/{}/'
 
-    blacklisted_videos_file = os.path.expanduser('~/.minq_xvideos/video_blacklist.blacklist')
-    videos_cache_dir = 'videos/{}/'
+    blacklisted_videos_file = os.path.expanduser('~/.minq_xvideos/')+'video_blacklist.blacklist'
+    videos_cache_dir = os.path.expanduser('~/.cache/minq_xvideos/')+'videos/{}/'
 
     video_ind = 0
     last_command = 'next'
@@ -157,12 +135,16 @@ class XVideos:
     def __init__(s):
         s.videos = []
 
-        blacklisted_videos_dir = os.path.dirname(s.blacklisted_videos_file)
-        if not os.path.isdir(blacklisted_videos_dir):
-            os.makedirs(blacklisted_videos_dir)
+        blacklisted_dir = os.path.dirname(s.blacklisted_videos_file)
+        if not os.path.isdir(blacklisted_dir):
+            os.makedirs(blacklisted_dir)
+
+        cache_dir = os.path.dirname(os.path.dirname(s.videos_cache_dir))
+        if not os.path.isdir(cache_dir):
+            os.makedirs(cache_dir)
 
         if not os.path.isfile(s.blacklisted_videos_file):
-            alert('Blacklisted video file doesn\'t exist; creating')
+            #alert('Blacklisted video file doesn\'t exist; creating')
             with open(s.blacklisted_videos_file, 'w') as f:
                 pass
     
