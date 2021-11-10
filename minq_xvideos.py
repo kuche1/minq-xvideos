@@ -11,7 +11,12 @@ import bs4
 
 
 
+SETTINGS_DIR = os.path.expanduser('~/.minq_xvideos/')
+CACHE_DIR = os.path.expanduser('~/.cache/minq_xvideos/')
 
+VIDEO_CACHE_DIR = CACHE_DIR+'videos/{}/'
+BLACKLISTED_VIDEOS_FILE = SETTINGS_DIR+'video_blacklist.blacklist'
+VIDEO_PLAYER_FILE = SETTINGS_DIR+'video_player'
 
 
 
@@ -38,15 +43,16 @@ def run_in_terminal(cmd:list, capture_output=False):
     return res
 
 def display_image(path):
-    #subprocess.run(shlex.join(['viu', s.thumb]), shell=True, check=True)
     run_in_terminal(['viu', path])
     #viu -h 12 -w 24 1.jpg -f
 
-def play_video(path):
-    os.environ['CACA_DRIVER'] = 'ncurses'
-    #subprocess.run(shlex.join(['mplayer', '-really-quiet', '-vo', 'caca', s.video]), shell=True, check=True)
-    run_in_terminal(['mplayer', '-really-quiet', '-vo', 'caca', path])
-    os.environ['CACA_DRIVER'] = ''
+def play_video(player, path):
+    if player == '':
+        os.environ['CACA_DRIVER'] = 'ncurses'
+        run_in_terminal(['mplayer', '-really-quiet', '-vo', 'caca', path])
+        os.environ['CACA_DRIVER'] = ''
+    else:
+        run_in_terminal([player, path])
 
     
 
@@ -55,7 +61,7 @@ DONE_POSTFIX = '.done'
 
 class XVideo:
     
-    def __init__(s, id, link, title, thumb, resolution, views, uploader, duration, cache_dir):
+    def __init__(s, id, link, title, thumb, resolution, views, uploader, duration):
         s.id = id
         s.link = link
         s.title = title
@@ -68,8 +74,8 @@ class XVideo:
         s.downloaded_thumb = False
         s.thumb = None
 
-        assert cache_dir.endswith('/')
-        cache_dir = cache_dir.format(id)
+        assert VIDEO_CACHE_DIR.endswith('/')
+        cache_dir = VIDEO_CACHE_DIR.format(id)
 
         s.video = cache_dir + 'video' 
         s.video_cached = os.path.isfile(s.video + DONE_POSTFIX)
@@ -81,16 +87,13 @@ class XVideo:
         if os.path.isfile(dir_):
             os.remove(dir_)
 
-        #run_in_terminal(['youtube-dl', s.link])
-        video_temp = '/tmp/' + s.id #get_temp_file(prefix=s.id)
-        #run_in_terminal(['youtube-dl', '--output', video_temp, s.link])
+        video_temp = '/tmp/' + s.id
         run_in_terminal(['yt-dlp', '--output', video_temp, s.link])
 
         dir_ = os.path.dirname(s.video)
         if not os.path.isdir(dir_):
             os.makedirs(dir_)
-        
-        #shutil.move(s.stock_file_name, s.video)
+
         shutil.move(video_temp, s.video)
         with open(s.video + DONE_POSTFIX, 'w') as f:
             pass
@@ -111,11 +114,11 @@ class XVideo:
 
         display_image(s.thumb)
 
-    def play(s):
+    def play(s, player):
         if not s.video_cached:
             s.download()
 
-        play_video(s.video)
+        play_video(player, s.video)
 
 
 
@@ -123,36 +126,50 @@ class XVideos:
     url = 'https://www.xvideos.com/'
     first_page_url = url
     nth_page_url = first_page_url + 'new/{}/'
-
-    blacklisted_videos_file = os.path.expanduser('~/.minq_xvideos/')+'video_blacklist.blacklist'
-    videos_cache_dir = os.path.expanduser('~/.cache/minq_xvideos/')+'videos/{}/'
-
-    video_ind = 0
-    last_command = 'next'
-    last_scrapped_page = 0
-
+    search_url = url + '?k={}&p={}' # first is term to search; second is page number (starts at 0)
+    search_term = ''
 
     def __init__(s):
-        s.videos = []
+        s.reset_video_counter()
 
-        blacklisted_dir = os.path.dirname(s.blacklisted_videos_file)
+        # video player
+        if not os.path.isfile(VIDEO_PLAYER_FILE):
+            with open(VIDEO_PLAYER_FILE, 'w') as f:
+                pass
+
+        with open(VIDEO_PLAYER_FILE, 'r') as f:
+            s.video_player = f.read()
+
+        # blacklist
+
+        blacklisted_dir = os.path.dirname(BLACKLISTED_VIDEOS_FILE)
         if not os.path.isdir(blacklisted_dir):
             os.makedirs(blacklisted_dir)
 
-        cache_dir = os.path.dirname(os.path.dirname(s.videos_cache_dir))
+        cache_dir = os.path.dirname(os.path.dirname(VIDEO_CACHE_DIR))
         if not os.path.isdir(cache_dir):
             os.makedirs(cache_dir)
 
-        if not os.path.isfile(s.blacklisted_videos_file):
-            #alert('Blacklisted video file doesn\'t exist; creating')
-            with open(s.blacklisted_videos_file, 'w') as f:
+        if not os.path.isfile(BLACKLISTED_VIDEOS_FILE):
+            with open(BLACKLISTED_VIDEOS_FILE, 'w') as f:
                 pass
     
-        with open(s.blacklisted_videos_file) as f:
+        with open(BLACKLISTED_VIDEOS_FILE) as f:
             videos = f.read().splitlines()
             while '' in videos:
                 videos.remove('')
             s.blacklisted_videos = videos
+
+    def reset_video_counter(s):
+        s.videos = []
+        s.video_ind = 0
+        s.last_scrapped_page = 0
+
+    def get_page_url(s, page_num):
+        if s.search_term == '':
+            return s.first_page_url if page_num == 1 else s.nth_page_url.format(page_num)
+        else:
+            return s.search_url.format(s.search_term, page_num-1)
 
     def extend_videos(s, videos):
         if len(videos) == 0:
@@ -164,18 +181,12 @@ class XVideos:
         
         s.videos.extend(videos)
 
-    def blacklist_a_video(s, video):
-        s.blacklisted_videos.append(video.id)
-        with open(s.blacklisted_videos_file, 'a') as f:
-            f.write(video.id)
-            f.write('\n')
-        s.videos.remove(video)
-
     def scrape_another_page(s):
         assert s.url.endswith('/')
 
         page_num = s.last_scrapped_page + 1
-        page_url = s.first_page_url if page_num == 1 else s.nth_page_url.format(page_num)
+        page_url = s.get_page_url(page_num)
+        print(f'{page_url=}')
 
         page = requests.get(page_url)
         assert page.ok
@@ -183,14 +194,17 @@ class XVideos:
         soup = bs4.BeautifulSoup(page.content, "lxml")
 
         videos = []
-        metadatas1 = soup.find_all(class_='title')
+        metadatas1 = soup.find_all(class_='thumb-under')
         images = soup.find_all(class_='thumb')
         metadatas2 = soup.find_all(class_='metadata')
-        durations = soup.find_all(class_='thumb-under')
+
+        assert len(metadatas1) == len(images) == len(metadatas2)
         
-        assert len(metadatas1) == len(images) == len(metadatas2) == len(durations)
+        for data, image, data2 in zip(metadatas1, images, metadatas2):
+
+            duration = data.next.find(class_='duration').text
         
-        for data, image, data2, duration in zip(metadatas1, images, metadatas2, durations):           
+            data = data.find(class_='title')     
             data = data.next
 
             id = data['href'].split('/')[1]
@@ -208,14 +222,24 @@ class XVideos:
             resolution = data2.next.next.text
             views = data2.next.text.split(' -  ')[-1].split(' - ')[0].split(' ')[0]
             uploader = data2.next.find(class_='name').text
-
-            duration = duration.next.find(class_='duration').text
             
-            videos.append(XVideo(id, link, title, image, resolution, views, uploader, duration, s.videos_cache_dir))
+            videos.append(XVideo(id, link, title, image, resolution, views, uploader, duration))
             print('scraped a video')
 
         s.extend_videos(videos)
-        s.last_scrapped_page = page_num  
+        s.last_scrapped_page = page_num
+
+    def blacklist_a_video(s, video):
+        s.blacklisted_videos.append(video.id)
+        with open(BLACKLISTED_VIDEOS_FILE, 'a') as f:
+            f.write(video.id)
+            f.write('\n')
+        s.videos.remove(video)
+
+    def set_video_player(s, player):
+        s.video_player = player
+        with open(VIDEO_PLAYER_FILE, 'w') as f:
+            f.write(player)
 
     def interactive(s):
         while True:
@@ -236,7 +260,7 @@ class XVideos:
 
 
             if cmd == '':
-                cmd = s.last_command
+                cmd = 'n'
 
             if cmd in ['quit', 'q']:
                 break
@@ -250,17 +274,23 @@ class XVideos:
                 video.download()
                 continue
             elif cmd in ['play']:
-                video.play()
+                video.play(s.video_player)
 
-            elif cmd in ['backlist', 'black']:
+            elif cmd in ['search', 's']:
+                to_search = input(">>")
+                s.reset_video_counter()
+                s.search_term = to_search
+
+            elif cmd in ['backlist', 'black', 'block']:
                 s.blacklist_a_video(video)
                 continue
+            elif cmd in ['player']:
+                player = input(">>")
+                s.set_video_player(player)
                 
             else:
                 alert(f'Unknown command: {cmd}')
                 continue
-
-            s.last_command = cmd
 
 
 if __name__ == '__main__':
