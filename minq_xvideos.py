@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# TODO
+# make the external player possible to take arguments
+
 import requests
 import os
 import shlex
