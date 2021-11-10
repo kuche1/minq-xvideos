@@ -256,39 +256,63 @@ class XVideos:
 
             video.show_preview()
 
-            cmd = input('>')
+            cmd = input('> ')
 
+            CMDS = []
+            CMD_DEFAULT = ['default action', '']
+            CMDS.append(CMD_DEFAULT)
+            CMD_QUIT = ['quit application', 'quit', 'q']
+            CMDS.append(CMD_QUIT)
+            CMD_NEXT = ['next video', 'next', 'n']
+            CMDS.append(CMD_NEXT)
+            CMD_PREV = ['previous video', 'previous', 'prev']
+            CMDS.append(CMD_PREV)
+            CMD_DOWNLOAD = ['download video', 'download', 'd']
+            CMDS.append(CMD_DOWNLOAD)
+            CMD_PLAY = ['play video', 'play']
+            CMDS.append(CMD_PLAY)
+            CMD_SEARCH = ['search for a video', 'search', 's']
+            CMDS.append(CMD_SEARCH)
+            CMD_BLACKLIST = ['blacklist a video', 'backlist', 'black', 'block']
+            CMDS.append(CMD_BLACKLIST)
+            CMD_CHANGE_PLAYER = ['change video player', 'player']
+            CMDS.append(CMD_CHANGE_PLAYER)
+            
 
-            if cmd == '':
+            if cmd in CMD_DEFAULT:
                 cmd = 'n'
 
-            if cmd in ['quit', 'q']:
+            if cmd in CMD_QUIT:
                 break
             
-            elif cmd in ['next', 'n', '']:
+            elif cmd in CMD_NEXT:
                 s.video_ind += 1
-            elif cmd in ['previous', 'prev', 'p']:
+            elif cmd in CMD_PREV:
                 s.video_ind -= 1
 
-            elif cmd in ['download']:
+            elif cmd in CMD_DOWNLOAD:
                 video.download()
                 continue
-            elif cmd in ['play']:
+            elif cmd in CMD_PLAY:
                 video.play(s.video_player)
 
-            elif cmd in ['search', 's']:
-                to_search = input(">>")
+            elif cmd in CMD_SEARCH:
+                to_search = input("Term to search >> ")
                 s.reset_video_counter()
                 s.search_term = to_search
 
-            elif cmd in ['backlist', 'black', 'block']:
+            elif cmd in CMD_BLACKLIST:
                 s.blacklist_a_video(video)
                 continue
-            elif cmd in ['player']:
-                player = input(">>")
+            elif cmd in CMD_CHANGE_PLAYER:
+                player = input("Set video player | Leave empty for default >> ")
                 s.set_video_player(player)
                 
             else:
+                print()
+                print("List of available commands:")
+                for c in CMDS:
+                    print(c)
                 alert(f'Unknown command: {cmd}')
                 continue
 
