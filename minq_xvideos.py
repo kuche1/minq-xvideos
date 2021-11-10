@@ -38,7 +38,7 @@ def download_raw(url):
 
 def run_in_terminal(cmd:list, capture_output=False):
     cmd_fixed = shlex.join(cmd)
-    print('running: %s'%cmd_fixed)
+    #print('running: %s'%cmd_fixed)
     res = subprocess.run(cmd_fixed, shell=True, check=True, capture_output=capture_output)
     return res
 
@@ -104,9 +104,10 @@ class XVideo:
         print(s.title)
         print(s.duration)
         print(s.resolution)
-        print(s.views)
-        print(s.uploader)
+        print(f'{s.views} views')
+        print(f'Uploader: {s.uploader}')
         print(s.link)
+        print(f"Cached: {s.video_cached}")
     
         if not s.downloaded_thumb:
             s.thumb = download_raw(s.thumb_url)
@@ -186,7 +187,7 @@ class XVideos:
 
         page_num = s.last_scrapped_page + 1
         page_url = s.get_page_url(page_num)
-        print(f'{page_url=}')
+        #print(f'{page_url=}')
 
         page = requests.get(page_url)
         assert page.ok
@@ -224,7 +225,7 @@ class XVideos:
             uploader = data2.next.find(class_='name').text
             
             videos.append(XVideo(id, link, title, image, resolution, views, uploader, duration))
-            print('scraped a video')
+            #print('scraped a video')
 
         s.extend_videos(videos)
         s.last_scrapped_page = page_num
@@ -297,7 +298,7 @@ class XVideos:
                 video.play(s.video_player)
 
             elif cmd in CMD_SEARCH:
-                to_search = input("Term to search >> ")
+                to_search = input("Term to search | Leave empty to go back to front page >> ")
                 s.reset_video_counter()
                 s.search_term = to_search
 
