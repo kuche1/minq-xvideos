@@ -269,7 +269,7 @@ class XVideos:
             CMDS.append(CMD_QUIT)
             CMD_NEXT = ['next video', 'next', 'n']
             CMDS.append(CMD_NEXT)
-            CMD_PREV = ['previous video', 'previous', 'prev']
+            CMD_PREV = ['previous video', 'previous', 'prev', 'p']
             CMDS.append(CMD_PREV)
             CMD_DOWNLOAD = ['download video', 'download', 'd']
             CMDS.append(CMD_DOWNLOAD)
