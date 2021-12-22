@@ -214,9 +214,18 @@ class XVideos:
             id = data['href'].split('/')[1]
             if id in s.blacklisted_videos:
                 continue
-            
-            link = s.url + data['href'][1:]
+
+            href_ = data['href']
+            assert href_.startswith('/')
+            link = s.url + href_[1:]
+            #print(f"{link=}")
+            #print(f"{data=}")
             title = data['title']
+
+            # this doesn't change a thing
+            #if '/THUMBNUM/' in link:
+            #    assert link.count('/THUMBNUM/') == 1
+            #    link = link.replace('/THUMBNUM/', '/')
             
             image = image.next.next['data-src']
             if 'THUMBNUM' in image:
@@ -228,7 +237,6 @@ class XVideos:
             uploader = data2.next.find(class_='name').text
             
             videos.append(XVideo(id, link, title, image, resolution, views, uploader, duration))
-            #print('scraped a video')
 
         s.extend_videos(videos)
         s.last_scrapped_page = page_num
@@ -281,6 +289,8 @@ class XVideos:
             CMDS.append(CMD_BLACKLIST)
             CMD_CHANGE_PLAYER = ['change video player', 'player']
             CMDS.append(CMD_CHANGE_PLAYER)
+            CMD_DEBUG = ['debug']
+            CMDS.append(CMD_DEBUG)
             
 
             if cmd in CMD_DEFAULT:
@@ -311,7 +321,10 @@ class XVideos:
             elif cmd in CMD_CHANGE_PLAYER:
                 player = input("Set video player | Leave empty for default >> ")
                 s.set_video_player(player)
-                
+
+            elif cmd in CMD_DEBUG:
+                breakpoint()
+
             else:
                 print()
                 print("List of available commands:")
