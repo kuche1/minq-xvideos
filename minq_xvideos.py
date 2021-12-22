@@ -273,7 +273,7 @@ class XVideos:
             CMDS = []
             CMD_DEFAULT = ['default action', '']
             CMDS.append(CMD_DEFAULT)
-            CMD_QUIT = ['quit application', 'quit', 'q']
+            CMD_QUIT = ['quit application', 'quit', 'q', 'exit']
             CMDS.append(CMD_QUIT)
             CMD_NEXT = ['next video', 'next', 'n']
             CMDS.append(CMD_NEXT)
