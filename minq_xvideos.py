@@ -13,7 +13,7 @@ import shutil
 import bs4
 
 
-HERE = os.path.dirname(__file__)
+HERE = os.path.dirname(os.path.realpath(__file__))
 
 SETTINGS_DIR = os.path.expanduser('~/.minq_xvideos/')
 CACHE_DIR = os.path.expanduser('~/.cache/minq_xvideos/')
