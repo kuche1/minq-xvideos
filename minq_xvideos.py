@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#! /usr/bin/env python3
 
 # TODO
 # make the external player possible to take arguments
@@ -13,6 +13,7 @@ import shutil
 import bs4
 
 
+HERE = os.path.dirname(__file__)
 
 SETTINGS_DIR = os.path.expanduser('~/.minq_xvideos/')
 CACHE_DIR = os.path.expanduser('~/.cache/minq_xvideos/')
@@ -20,7 +21,6 @@ CACHE_DIR = os.path.expanduser('~/.cache/minq_xvideos/')
 VIDEO_CACHE_DIR = CACHE_DIR+'videos/{}/'
 BLACKLISTED_VIDEOS_FILE = SETTINGS_DIR+'video_blacklist.blacklist'
 VIDEO_PLAYER_FILE = SETTINGS_DIR+'video_player'
-
 
 
 def alert(msg):
@@ -41,13 +41,25 @@ def download_raw(url):
 
 def run_in_terminal(cmd:list, capture_output=False):
     cmd_fixed = shlex.join(cmd)
-    #print('running: %s'%cmd_fixed)
     res = subprocess.run(cmd_fixed, shell=True, check=True, capture_output=capture_output)
     return res
 
+def check_sixel_support():
+    out = run_in_terminal(['bash', f'{HERE}/sixel_check.bash'], capture_output=True)
+    out = out.stdout
+    if out == b'no\n':
+        return False
+    elif out == b'yes\n':
+        return True
+    assert False
+
 def display_image(path):
-    run_in_terminal(['viu', path])
-    #viu -h 12 -w 24 1.jpg -f
+    if check_sixel_support():
+        run_in_terminal(['convert', path, 'sixel:-']) # sudo pacman -S --needed imagemagick
+        # convert Some_image.jpg -geometry 800x600 sixel:-
+    else:
+        run_in_terminal(['viu', path])
+        #viu -h 12 -w 24 1.jpg -f
 
 def play_video(player, path):
     if player == '':
@@ -179,9 +191,7 @@ class XVideos:
         if len(videos) == 0:
             return
         
-        # TODO: check for repeating videos
-
-        videos = [video for video in videos if video.id not in s.blacklisted_videos]
+        videos = [video for video in videos if video.id not in s.blacklisted_videos and video.id not in s.videos]
         
         s.videos.extend(videos)
 
@@ -190,7 +200,6 @@ class XVideos:
 
         page_num = s.last_scrapped_page + 1
         page_url = s.get_page_url(page_num)
-        #print(f'{page_url=}')
 
         page = requests.get(page_url)
         assert page.ok
