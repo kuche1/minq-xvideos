@@ -92,10 +92,18 @@ class XVideo:
         assert VIDEO_CACHE_DIR.endswith('/')
         cache_dir = VIDEO_CACHE_DIR.format(id)
 
+        #s.thumb = cache_dir + 'thumb'
+        #s.thumb_cached = os.path.isfile(s.thumb + DONE_POSTFIX)
+
         s.video = cache_dir + 'video' 
         s.video_cached = os.path.isfile(s.video + DONE_POSTFIX)
 
-    def download(s):
+    def download_thumb(s): # TODO
+        if not s.downloaded_thumb:
+            s.thumb = download_raw(s.thumb_url)
+            s.downloaded_thumb = True
+
+    def download(s): # TODO download_video
         s.video_cached = False
         
         dir_ = s.video + DONE_POSTFIX
@@ -112,7 +120,7 @@ class XVideo:
         shutil.move(video_temp, s.video)
         with open(s.video + DONE_POSTFIX, 'w') as f:
             pass
-        
+
         s.video_cached = True
 
     def show_preview(s):
@@ -123,10 +131,8 @@ class XVideo:
         print(f'Uploader: {s.uploader}')
         print(s.link)
         print(f"Cached: {s.video_cached}")
-    
-        if not s.downloaded_thumb:
-            s.thumb = download_raw(s.thumb_url)
-            s.downloaded_thumb = True
+
+        s.download_thumb()
 
         display_image(s.thumb)
 
