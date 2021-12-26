@@ -31,8 +31,11 @@ def get_temp_file(prefix=None):
     with tempfile.NamedTemporaryFile(delete=False, prefix=prefix) as f:
         return f.name
 
-def download_raw(url):
-    name = get_temp_file()
+def download_raw(url, save_directory=None):
+    if save_directory == None:
+        name = get_temp_file()
+    else:
+        name = save_directory
     with open(name, 'wb') as f:
         page = requests.get(url)
         assert page.ok
@@ -86,24 +89,16 @@ class XVideo:
         s.uploader = uploader
         s.duration = duration
 
-        s.downloaded_thumb = False
-        s.thumb = None
-
         assert VIDEO_CACHE_DIR.endswith('/')
         cache_dir = VIDEO_CACHE_DIR.format(id)
 
-        #s.thumb = cache_dir + 'thumb'
-        #s.thumb_cached = os.path.isfile(s.thumb + DONE_POSTFIX)
+        s.thumb = cache_dir + 'thumb'
+        s.thumb_cached = os.path.isfile(s.thumb + DONE_POSTFIX)
 
         s.video = cache_dir + 'video' 
         s.video_cached = os.path.isfile(s.video + DONE_POSTFIX)
 
-    def download_thumb(s): # TODO
-        if not s.downloaded_thumb:
-            s.thumb = download_raw(s.thumb_url)
-            s.downloaded_thumb = True
-
-    def download(s): # TODO download_video
+    def download_video(s):
         s.video_cached = False
         
         dir_ = s.video + DONE_POSTFIX
@@ -118,8 +113,7 @@ class XVideo:
             os.makedirs(dir_)
 
         shutil.move(video_temp, s.video)
-        with open(s.video + DONE_POSTFIX, 'w') as f:
-            pass
+        with open(s.video + DONE_POSTFIX, 'w') as f: pass
 
         s.video_cached = True
 
@@ -128,14 +122,20 @@ class XVideo:
         print(f'{s.duration} | {s.resolution}')
         print(f'Views: {s.views} | Uploader: {s.uploader}')
         print(s.link)
-        print(f"Video cached: {s.video_cached}")
 
-        s.download_thumb()
+        if not s.thumb_cached:
+            os.makedirs(os.path.dirname(s.thumb))
+            s.thumb = download_raw(s.thumb_url, save_directory=s.thumb)
+            with open(s.thumb + DONE_POSTFIX, 'w') as f: pass
+            s.thumb_cached = True
+
+        print(f"Thumb+Video cached: {s.thumb_cached}+{s.video_cached}")
+
         display_image(s.thumb)
 
     def play(s, player):
         if not s.video_cached:
-            s.download()
+            s.download_video()
 
         play_video(player, s.video)
 
@@ -312,7 +312,7 @@ class XVideos:
                 s.video_ind -= 1
 
             elif cmd in CMD_DOWNLOAD:
-                video.download()
+                video.download_video()
                 continue
             elif cmd in CMD_PLAY:
                 video.play(s.video_player)
