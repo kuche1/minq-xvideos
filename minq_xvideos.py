@@ -125,15 +125,12 @@ class XVideo:
 
     def show_preview(s):
         print(s.title)
-        print(s.duration)
-        print(s.resolution)
-        print(f'{s.views} views')
-        print(f'Uploader: {s.uploader}')
+        print(f'{s.duration} | {s.resolution}')
+        print(f'Views: {s.views} | Uploader: {s.uploader}')
         print(s.link)
-        print(f"Cached: {s.video_cached}")
+        print(f"Video cached: {s.video_cached}")
 
         s.download_thumb()
-
         display_image(s.thumb)
 
     def play(s, player):
