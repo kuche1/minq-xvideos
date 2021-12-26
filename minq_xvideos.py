@@ -227,8 +227,6 @@ class XVideos:
             href_ = data['href']
             assert href_.startswith('/')
             link = s.url + href_[1:]
-            #print(f"{link=}")
-            #print(f"{data=}")
             title = data['title']
 
             # this doesn't change a thing
