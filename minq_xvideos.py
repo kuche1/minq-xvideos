@@ -15,12 +15,12 @@ import bs4
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 
-SETTINGS_DIR = os.path.expanduser('~/.minq_xvideos/')
+SETTINGS_DIR = os.path.expanduser('~/.config/minq_xvideos/')
 CACHE_DIR = os.path.expanduser('~/.cache/minq_xvideos/')
 
 VIDEO_CACHE_DIR = CACHE_DIR+'videos/{}/'
-BLACKLISTED_VIDEOS_FILE = SETTINGS_DIR+'video_blacklist.blacklist'
-VIDEO_PLAYER_FILE = SETTINGS_DIR+'video_player'
+SETTING_BLACKLISTED_VIDEOS_FILE = SETTINGS_DIR+'video_blacklist.blacklist'
+SETTING_VIDEO_PLAYER_FILE = SETTINGS_DIR+'video_player'
 
 
 def alert(msg):
@@ -151,29 +151,26 @@ class XVideos:
     def __init__(s):
         s.reset_video_counter()
 
-        # video player
-        if not os.path.isfile(VIDEO_PLAYER_FILE):
-            with open(VIDEO_PLAYER_FILE, 'w') as f:
-                pass
+        if not os.path.isdir(SETTINGS_DIR):
+            os.makedirs(SETTINGS_DIR)
 
-        with open(VIDEO_PLAYER_FILE, 'r') as f:
+        # video player
+        if not os.path.isfile(SETTING_VIDEO_PLAYER_FILE):
+            with open(SETTING_VIDEO_PLAYER_FILE, 'w') as f:
+                pass
+        with open(SETTING_VIDEO_PLAYER_FILE, 'r') as f:
             s.video_player = f.read()
 
-        # blacklist
-
-        blacklisted_dir = os.path.dirname(BLACKLISTED_VIDEOS_FILE)
-        if not os.path.isdir(blacklisted_dir):
-            os.makedirs(blacklisted_dir)
-
+        # cache
         cache_dir = os.path.dirname(os.path.dirname(VIDEO_CACHE_DIR))
         if not os.path.isdir(cache_dir):
             os.makedirs(cache_dir)
 
-        if not os.path.isfile(BLACKLISTED_VIDEOS_FILE):
-            with open(BLACKLISTED_VIDEOS_FILE, 'w') as f:
+        # blacklist
+        if not os.path.isfile(SETTING_BLACKLISTED_VIDEOS_FILE):
+            with open(SETTING_BLACKLISTED_VIDEOS_FILE, 'w') as f:
                 pass
-    
-        with open(BLACKLISTED_VIDEOS_FILE) as f:
+        with open(SETTING_BLACKLISTED_VIDEOS_FILE) as f:
             videos = f.read().splitlines()
             while '' in videos:
                 videos.remove('')
@@ -260,7 +257,7 @@ class XVideos:
 
     def set_video_player(s, player):
         s.video_player = player
-        with open(VIDEO_PLAYER_FILE, 'w') as f:
+        with open(SETTING_VIDEO_PLAYER_FILE, 'w') as f:
             f.write(player)
 
     def interactive(s):
