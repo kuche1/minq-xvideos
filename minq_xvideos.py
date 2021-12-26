@@ -22,6 +22,8 @@ VIDEO_CACHE_DIR = CACHE_DIR+'videos/{}/'
 SETTING_BLACKLISTED_VIDEOS_FILE = SETTINGS_DIR+'video_blacklist.blacklist'
 SETTING_VIDEO_PLAYER_FILE = SETTINGS_DIR+'video_player'
 
+DONE_POSTFIX = '.done'
+SIXEL_POSTFIX = '.sixel'
 
 def alert(msg):
     print(msg)
@@ -48,18 +50,22 @@ def run_in_terminal(cmd:list, capture_output=False):
     return res
 
 def check_sixel_support():
-    out = run_in_terminal(['bash', f'{HERE}/sixel_check.bash'], capture_output=True)
-    out = out.stdout
-    if out == b'no\n':
-        return False
-    elif out == b'yes\n':
+    ret = os.system(shlex.join(['bash', f'{HERE}/sixel_check.bash']))
+    if ret == 0:
+        return True
+    elif ret == 256:
         return True
     assert False
 
 def display_image(path):
     if check_sixel_support():
-        run_in_terminal(['convert', path, 'sixel:-']) # sudo pacman -S --needed imagemagick
+        sixel = path + SIXEL_POSTFIX
+        sixel_done = sixel + DONE_POSTFIX
+        if not os.path.isfile(sixel_done):
+            run_in_terminal(['convert', path, '-format', 'sixel', sixel])
+        run_in_terminal(['convert', sixel, 'sixel:-']) # sudo pacman -S --needed imagemagick
         # convert Some_image.jpg -geometry 800x600 sixel:-
+        with open(sixel_done, 'w') as f: pass
     else:
         run_in_terminal(['viu', path])
         #viu -h 12 -w 24 1.jpg -f
@@ -74,8 +80,6 @@ def play_video(player, path):
 
     
 
-
-DONE_POSTFIX = '.done'
 
 class XVideo:
     
@@ -129,7 +133,7 @@ class XVideo:
             with open(s.thumb + DONE_POSTFIX, 'w') as f: pass
             s.thumb_cached = True
 
-        print(f"Thumb+Video cached: {s.thumb_cached}+{s.video_cached}")
+        print(f"Video cached: {s.video_cached}")
 
         display_image(s.thumb)
 
@@ -250,7 +254,7 @@ class XVideos:
 
     def blacklist_a_video(s, video):
         s.blacklisted_videos.append(video.id)
-        with open(BLACKLISTED_VIDEOS_FILE, 'a') as f:
+        with open(SETTING_BLACKLISTED_VIDEOS_FILE, 'a') as f:
             f.write(video.id)
             f.write('\n')
         s.videos.remove(video)
@@ -261,7 +265,8 @@ class XVideos:
             f.write(player)
 
     def interactive(s):
-        while True:
+        running = True
+        while running:
             print()
             print()
             
@@ -275,7 +280,11 @@ class XVideos:
 
             video.show_preview()
 
-            cmd = input('> ')
+            try:
+                cmd = input('> ')
+            except KeyboardInterrupt:
+                cmd = ''
+                running = False
 
             CMDS = []
             CMD_DEFAULT = ['default action', '']
@@ -301,10 +310,10 @@ class XVideos:
             
 
             if cmd in CMD_DEFAULT:
-                cmd = 'n'
+                cmd = CMD_NEXT[0]
 
             if cmd in CMD_QUIT:
-                break
+                running = False
             
             elif cmd in CMD_NEXT:
                 s.video_ind += 1
