@@ -1,5 +1,7 @@
 #! /usr/bin/env python3
 
+# TODO get rid of the sixel shit (MAKEPKG included)
+
 # TODO
 # make the external player possible to take arguments
 # make image viewer possible to change
