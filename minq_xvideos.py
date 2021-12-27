@@ -2,6 +2,9 @@
 
 # TODO
 # make the external player possible to take arguments
+# make image viewer possible to change
+# save video metadata
+# make running multiple instances possible
 
 import requests
 import os
@@ -49,26 +52,9 @@ def run_in_terminal(cmd:list, capture_output=False):
     res = subprocess.run(cmd_fixed, shell=True, check=True, capture_output=capture_output)
     return res
 
-def check_sixel_support():
-    ret = os.system(shlex.join(['bash', f'{HERE}/sixel_check.bash']))
-    if ret == 0:
-        return True
-    elif ret == 256:
-        return True
-    assert False
-
 def display_image(path):
-    if check_sixel_support():
-        sixel = path + SIXEL_POSTFIX
-        sixel_done = sixel + DONE_POSTFIX
-        if not os.path.isfile(sixel_done):
-            run_in_terminal(['convert', path, '-format', 'sixel', sixel])
-        run_in_terminal(['convert', sixel, 'sixel:-']) # sudo pacman -S --needed imagemagick
-        # convert Some_image.jpg -geometry 800x600 sixel:-
-        with open(sixel_done, 'w') as f: pass
-    else:
-        run_in_terminal(['viu', path])
-        #viu -h 12 -w 24 1.jpg -f
+    run_in_terminal(['viu', path]) # not: viu supports sixel graphics
+    #viu -h 12 -w 24 1.jpg -f
 
 def play_video(player, path):
     if player == '':
@@ -76,10 +62,8 @@ def play_video(player, path):
         run_in_terminal(['mplayer', '-really-quiet', '-vo', 'caca', path])
         os.environ['CACA_DRIVER'] = ''
     else:
-        # TODO this doesn't work for some reason
         run_in_terminal([player, path])
 
-    
 
 
 class XVideo:
