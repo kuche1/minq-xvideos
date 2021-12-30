@@ -64,7 +64,7 @@ def play_video(player, path):
         run_in_terminal(['mplayer', '-really-quiet', '-vo', 'caca', path])
         os.environ['CACA_DRIVER'] = ''
     else:
-        run_in_terminal([player, path])
+        run_in_terminal([player, path]) # TODO alert if command fails
 
 
 
