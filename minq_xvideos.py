@@ -284,7 +284,7 @@ class XVideos:
             CMDS.append(CMD_PREV)
             CMD_DOWNLOAD = ['download video', 'download', 'd']
             CMDS.append(CMD_DOWNLOAD)
-            CMD_PLAY = ['play video', 'play']
+            CMD_PLAY = ['play video', 'play', 'watch']
             CMDS.append(CMD_PLAY)
             CMD_SEARCH = ['search for a video', 'search', 's']
             CMDS.append(CMD_SEARCH)
