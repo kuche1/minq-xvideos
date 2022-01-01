@@ -3,6 +3,7 @@
 # TODO get rid of the sixel shit (MAKEPKG included)
 
 # TODO
+# include "more" option
 # make the external player possible to take arguments
 # make image viewer possible to change
 # save video metadata
