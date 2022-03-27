@@ -15,21 +15,22 @@ import shlex
 import tempfile
 import subprocess
 import shutil
-
 import bs4
+import argparse
+import minq_caching_thing; mct = minq_caching_thing.Minq_caching_thing()
 
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 
-SETTINGS_DIR = os.path.expanduser('~/.config/minq_xvideos/')
-CACHE_DIR = os.path.expanduser('~/.cache/minq_xvideos/')
+SETTINGS_DIR = os.path.expanduser('~/.config/minq-xvideos/')
+CACHE_DIR = os.path.expanduser('~/.cache/minq-xvideos/')
 
 VIDEO_CACHE_DIR = CACHE_DIR+'videos/{}/'
 SETTING_BLACKLISTED_VIDEOS_FILE = SETTINGS_DIR+'video_blacklist.blacklist'
 SETTING_VIDEO_PLAYER_FILE = SETTINGS_DIR+'video_player'
 
 DONE_POSTFIX = '.done'
-SIXEL_POSTFIX = '.sixel'
+
 
 def alert(msg):
     print(msg)
@@ -56,7 +57,7 @@ def run_in_terminal(cmd:list, capture_output=False):
     return res
 
 def display_image(path):
-    run_in_terminal(['viu', path]) # not: viu supports sixel graphics
+    run_in_terminal(['viu', path])
     #viu -h 12 -w 24 1.jpg -f
 
 def play_video(player, path):
@@ -339,6 +340,9 @@ class XVideos:
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Command line port of xvideos')
+    args = parser.parse_args()
+
     xvideos = XVideos()
     xvideos.interactive()
 
