@@ -23,9 +23,7 @@ import minq_caching_thing; mct = minq_caching_thing.Minq_caching_thing()
 HERE = os.path.dirname(os.path.realpath(__file__))
 
 SETTINGS_DIR = os.path.expanduser('~/.config/minq-xvideos/')
-CACHE_DIR = os.path.expanduser('~/.cache/minq-xvideos/')
 
-VIDEO_CACHE_DIR = CACHE_DIR+'videos/{}/'
 SETTING_BLACKLISTED_VIDEOS_FILE = SETTINGS_DIR+'video_blacklist.blacklist'
 SETTING_VIDEO_PLAYER_FILE = SETTINGS_DIR+'video_player'
 
@@ -36,20 +34,15 @@ def alert(msg):
     print(msg)
     input("PRESS ENTER")
 
-def get_temp_file(prefix=None):
-    with tempfile.NamedTemporaryFile(delete=False, prefix=prefix) as f:
-        return f.name
-
-def download_raw(url, save_directory=None):
-    if save_directory == None:
-        name = get_temp_file()
-    else:
-        name = save_directory
-    with open(name, 'wb') as f:
+def download_raw(url):
+    cont_path = mct.get_url(url, return_path=True)
+    if cont_path == None:
         page = requests.get(url)
         assert page.ok
-        f.write(page.content)
-    return name
+        cont = page.content
+        mct.cache_url(url, cont, blocking=True)
+        cont_path = mct.get_url(url, return_path=True)
+    return cont_path
 
 def run_in_terminal(cmd:list, capture_output=False):
     cmd_fixed = shlex.join(cmd)
@@ -82,55 +75,31 @@ class XVideo:
         s.uploader = uploader
         s.duration = duration
 
-        assert VIDEO_CACHE_DIR.endswith('/')
-        cache_dir = VIDEO_CACHE_DIR.format(id)
-
-        s.thumb = cache_dir + 'thumb'
-        s.thumb_cached = os.path.isfile(s.thumb + DONE_POSTFIX)
-
-        s.video = cache_dir + 'video' 
-        s.video_cached = os.path.isfile(s.video + DONE_POSTFIX)
-
     def download_video(s):
-        s.video_cached = False
+        url = f'yt-dlp://{s.link}'
         
-        dir_ = s.video + DONE_POSTFIX
-        if os.path.isfile(dir_):
-            os.remove(dir_)
+        path = mct.get_url(url, return_path=True)
+        if path == None:
+            video_temp = '/tmp/' + s.id # TODO replace with real temporary file
+            run_in_terminal(['yt-dlp', '--output', video_temp, s.link])
+    
+            with open(video_temp, 'rb') as f:
+                data = f.read()
+            path = mct.cache_url(url, data, blocking=True)
 
-        video_temp = '/tmp/' + s.id
-        run_in_terminal(['yt-dlp', '--output', video_temp, s.link])
-
-        dir_ = os.path.dirname(s.video)
-        if not os.path.isdir(dir_):
-            os.makedirs(dir_)
-
-        shutil.move(video_temp, s.video)
-        with open(s.video + DONE_POSTFIX, 'w') as f: pass
-
-        s.video_cached = True
+        return path
 
     def show_preview(s):
         print(s.title)
         print(f'{s.duration} | {s.resolution}')
         print(f'Views: {s.views} | Uploader: {s.uploader}')
         print(s.link)
-
-        if not s.thumb_cached:
-            os.makedirs(os.path.dirname(s.thumb))
-            s.thumb = download_raw(s.thumb_url, save_directory=s.thumb)
-            with open(s.thumb + DONE_POSTFIX, 'w') as f: pass
-            s.thumb_cached = True
-
-        print(f"Video cached: {s.video_cached}")
-
-        display_image(s.thumb)
+        thumb_path = download_raw(s.thumb_url)
+        display_image(thumb_path)
 
     def play(s, player):
-        if not s.video_cached:
-            s.download_video()
-
-        play_video(player, s.video)
+        path = s.download_video()
+        play_video(player, path)
 
 
 
@@ -153,11 +122,6 @@ class XVideos:
                 pass
         with open(SETTING_VIDEO_PLAYER_FILE, 'r') as f:
             s.video_player = f.read()
-
-        # cache
-        cache_dir = os.path.dirname(os.path.dirname(VIDEO_CACHE_DIR))
-        if not os.path.isdir(cache_dir):
-            os.makedirs(cache_dir)
 
         # blacklist
         if not os.path.isfile(SETTING_BLACKLISTED_VIDEOS_FILE):
