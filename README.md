@@ -1,3 +1,3 @@
-# minq_xvideos
+# minq-xvideos
 
-https://aur.archlinux.org/packages/minq_xvideos-git/
+https://aur.archlinux.org/packages/minq-xvideos-git/
