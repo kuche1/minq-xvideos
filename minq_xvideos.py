@@ -1,12 +1,12 @@
 #! /usr/bin/env python3
 
+# TODO block video by name
 # TODO get rid of the sixel shit (MAKEPKG included)
 
 # TODO
 # include "more" option
 # make the external player possible to take arguments
 # make image viewer possible to change
-# save video metadata
 # make running multiple instances possible
 
 import requests
@@ -34,6 +34,18 @@ def alert(msg):
     print(msg)
     input("PRESS ENTER")
 
+def download_page(url):
+    try:
+        page = requests.get(url)
+    except requests.exceptions.ConnectionError:
+        cont = mct.get_url(url)
+        assert cont != None, 'No internet'
+    else:
+        assert page.ok
+        cont = page.content
+        mct.cache_url(url, cont)
+    return cont
+
 def download_raw(url):
     cont_path = mct.get_url(url, return_path=True)
     if cont_path == None:
@@ -42,6 +54,7 @@ def download_raw(url):
         cont = page.content
         mct.cache_url(url, cont, blocking=True)
         cont_path = mct.get_url(url, return_path=True)
+        assert cont_path != None
     return cont_path
 
 def run_in_terminal(cmd:list, capture_output=False):
@@ -158,10 +171,9 @@ class XVideos:
         page_num = s.last_scrapped_page + 1
         page_url = s.get_page_url(page_num)
 
-        page = requests.get(page_url)
-        assert page.ok
+        content = download_page(page_url)
 
-        soup = bs4.BeautifulSoup(page.content, "lxml")
+        soup = bs4.BeautifulSoup(content, "lxml")
 
         videos = []
         metadatas1 = soup.find_all(class_='thumb-under')
@@ -254,7 +266,7 @@ class XVideos:
             CMDS.append(CMD_PLAY)
             CMD_SEARCH = ['search for a video', 'search', 's']
             CMDS.append(CMD_SEARCH)
-            CMD_BLACKLIST = ['blacklist a video', 'backlist', 'black', 'block']
+            CMD_BLACKLIST = ['blacklist a video', 'backlist', 'black', 'block', 'blk']
             CMDS.append(CMD_BLACKLIST)
             CMD_CHANGE_PLAYER = ['change video player', 'player']
             CMDS.append(CMD_CHANGE_PLAYER)
